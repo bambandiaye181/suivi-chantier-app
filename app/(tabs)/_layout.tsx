@@ -1,5 +1,5 @@
 import { Tabs } from 'expo-router';
-import { Chrome as Home, ClipboardList, TriangleAlert as AlertTriangle, User } from 'lucide-react-native';
+import { Building2, ClipboardList, TriangleAlert as AlertTriangle, User } from 'lucide-react-native';
 
 export default function TabLayout() {
   return (
@@ -18,7 +18,14 @@ export default function TabLayout() {
         name="index"
         options={{
           title: 'Tableau de bord',
-          tabBarIcon: ({ color, size }) => <Home size={size} color={color} />,
+          tabBarIcon: ({ color, size }) => <Building2 size={size} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="projects"
+        options={{
+          title: 'Projets',
+          tabBarIcon: ({ color, size }) => <Building2 size={size} color={color} />,
         }}
       />
       <Tabs.Screen

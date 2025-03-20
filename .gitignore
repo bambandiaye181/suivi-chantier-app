@@ -1,10 +1,34 @@
-# For projects using Nanoc (http://nanoc.ws/)
+# dependencies
+node_modules/
 
-# Default location for output (needs to match output_dir's value found in nanoc.yaml)
-output/
+# expo
+.expo/
+dist/
+web-build/
+expo-env.d.ts
 
-# Temporary file directory
-tmp/nanoc/
+# native
+*.orig.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
 
-# Crash Log
-crash.log
+# metro
+.metro-health-check*
+
+# debug
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+
+# macos
+.DS_Store
+*.pem
+
+# local env files
+.env*.local
+
+# typescript
+*.tsbuildinfo
