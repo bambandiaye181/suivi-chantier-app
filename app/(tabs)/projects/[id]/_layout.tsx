@@ -15,6 +15,17 @@ export default function ProjectLayout() {
         }}
       />
       <Stack.Screen
+        name="tasks"
+        options={{
+          title: 'Tâches du projet',
+          headerStyle: {
+            backgroundColor: '#ffffff',
+          },
+          headerTintColor: '#111827',
+          headerShadowVisible: false,
+        }}
+      />
+      <Stack.Screen
         name="edit"
         options={{
           presentation: 'modal',

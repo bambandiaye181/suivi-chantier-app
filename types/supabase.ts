@@ -47,6 +47,58 @@ export interface Database {
           updated_at?: string
         }
       }
+      tasks: {
+        Row: {
+          id: string
+          title: string
+          description: string | null
+          status: 'not_started' | 'in_progress' | 'completed'
+          project_id: string
+          category_id: string
+          due_date: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          title: string
+          description?: string | null
+          status?: 'not_started' | 'in_progress' | 'completed'
+          project_id: string
+          category_id: string
+          due_date?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          title?: string
+          description?: string | null
+          status?: 'not_started' | 'in_progress' | 'completed'
+          project_id?: string
+          category_id?: string
+          due_date?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      work_categories: {
+        Row: {
+          id: string
+          name: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          created_at?: string
+        }
+      }
     }
   }
 }

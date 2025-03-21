@@ -85,7 +85,7 @@ export default function ProjectsScreen() {
             <Pressable
               key={project.id}
               style={styles.projectCard}
-              onPress={() => router.push(`/project/${project.id}`)}
+              onPress={() => router.push(`/projects/${project.id}/tasks`)}
             >
               <View style={styles.projectHeader}>
                 <Building2 size={24} color="#2563eb" />
