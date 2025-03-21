@@ -1,13 +1,50 @@
 import { useState } from 'react';
-import { View, Text, TextInput, Pressable, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, TextInput, Pressable, StyleSheet, ScrollView, Alert } from 'react-native';
 import { router } from 'expo-router';
 import { ArrowLeft } from 'lucide-react-native';
+import { supabase } from '@/lib/supabase';
 
 export default function RegisterScreen() {
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [phone, setPhone] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleRegister = async () => {
+    if (!email || !password) {
+      Alert.alert('Erreur', 'Veuillez remplir tous les champs');
+      return;
+    }
+
+    if (password.length < 6) {
+      Alert.alert('Erreur', 'Le mot de passe doit contenir au moins 6 caractères');
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+      });
+
+      if (error) throw error;
+
+      Alert.alert('Succès', 'Votre compte a été créé avec succès', [
+        {
+          text: 'OK',
+          onPress: () => router.replace('/(tabs)'),
+        },
+      ]);
+    } catch (error) {
+      console.error('Error registering:', error);
+      Alert.alert(
+        'Erreur',
+        error instanceof Error ? error.message : "Une erreur est survenue lors de l'inscription"
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <ScrollView style={styles.container}>
@@ -22,33 +59,15 @@ export default function RegisterScreen() {
 
       <View style={styles.form}>
         <View style={styles.inputGroup}>
-          <Text style={styles.label}>Prénom</Text>
+          <Text style={styles.label}>Email</Text>
           <TextInput
             style={styles.input}
-            value={firstName}
-            onChangeText={setFirstName}
-            placeholder="Votre prénom"
-          />
-        </View>
-
-        <View style={styles.inputGroup}>
-          <Text style={styles.label}>Nom</Text>
-          <TextInput
-            style={styles.input}
-            value={lastName}
-            onChangeText={setLastName}
-            placeholder="Votre nom"
-          />
-        </View>
-
-        <View style={styles.inputGroup}>
-          <Text style={styles.label}>Téléphone</Text>
-          <TextInput
-            style={styles.input}
-            value={phone}
-            onChangeText={setPhone}
-            placeholder="Votre numéro de téléphone"
-            keyboardType="phone-pad"
+            value={email}
+            onChangeText={setEmail}
+            placeholder="Votre adresse email"
+            keyboardType="email-address"
+            autoCapitalize="none"
+            autoComplete="email"
           />
         </View>
 
@@ -58,14 +77,20 @@ export default function RegisterScreen() {
             style={styles.input}
             value={password}
             onChangeText={setPassword}
-            placeholder="5 caractères minimum"
+            placeholder="6 caractères minimum"
             secureTextEntry
           />
-          <Text style={styles.hint}>Le mot de passe doit contenir au moins 5 caractères</Text>
+          <Text style={styles.hint}>Le mot de passe doit contenir au moins 6 caractères</Text>
         </View>
 
-        <Pressable style={styles.registerButton}>
-          <Text style={styles.registerButtonText}>S'inscrire</Text>
+        <Pressable 
+          style={[styles.registerButton, isLoading && styles.registerButtonDisabled]}
+          onPress={handleRegister}
+          disabled={isLoading}
+        >
+          <Text style={styles.registerButtonText}>
+            {isLoading ? 'Inscription...' : "S'inscrire"}
+          </Text>
         </Pressable>
       </View>
     </ScrollView>
@@ -124,6 +149,9 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     alignItems: 'center',
     marginTop: 8,
+  },
+  registerButtonDisabled: {
+    backgroundColor: '#93c5fd',
   },
   registerButtonText: {
     color: '#ffffff',

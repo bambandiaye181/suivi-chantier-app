@@ -1,17 +1,55 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TextInput, ScrollView, Pressable, Alert } from 'react-native';
-import { router } from 'expo-router';
+import { useLocalSearchParams, router } from 'expo-router';
 import { Calendar, MapPin, Euro, FileText } from 'lucide-react-native';
 import { supabase } from '@/lib/supabase';
+import { Database } from '@/types/supabase';
 
-export default function NewProjectScreen() {
+type Project = Database['public']['Tables']['projects']['Row'];
+
+export default function EditProjectScreen() {
+  const { id } = useLocalSearchParams();
+  const [project, setProject] = useState<Project | null>(null);
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [address, setAddress] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [budget, setBudget] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    fetchProject();
+  }, [id]);
+
+  const fetchProject = async () => {
+    try {
+      setIsLoading(true);
+      const { data, error } = await supabase
+        .from('projects')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+      if (error) throw error;
+      if (data) {
+        setProject(data);
+        setName(data.name);
+        setDescription(data.description || '');
+        setAddress(data.address || '');
+        setStartDate(data.start_date || '');
+        setEndDate(data.end_date || '');
+        setBudget(data.budget?.toString() || '');
+      }
+    } catch (error) {
+      console.error('Error fetching project:', error);
+      Alert.alert('Erreur', 'Impossible de charger les détails du projet');
+      router.back();
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const validateForm = () => {
     if (!name.trim()) {
@@ -43,43 +81,45 @@ export default function NewProjectScreen() {
     try {
       setIsSubmitting(true);
 
-      const {
-        data: { user },
-        error: userError,
-      } = await supabase.auth.getUser();
-
-      if (userError || !user) {
-        throw new Error('Vous devez être connecté pour créer un projet');
-      }
-
-      const { error } = await supabase.from('projects').insert({
-        name: name.trim(),
-        description: description.trim() || null,
-        address: address.trim() || null,
-        start_date: startDate || null,
-        end_date: endDate || null,
-        budget: budget ? parseFloat(budget) : null,
-        user_id: user.id,
-      });
+      const { error } = await supabase
+        .from('projects')
+        .update({
+          name: name.trim(),
+          description: description.trim() || null,
+          address: address.trim() || null,
+          start_date: startDate || null,
+          end_date: endDate || null,
+          budget: budget ? parseFloat(budget) : null,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', id);
 
       if (error) throw error;
 
-      Alert.alert('Succès', 'Le projet a été créé avec succès', [
+      Alert.alert('Succès', 'Le projet a été modifié avec succès', [
         {
           text: 'OK',
           onPress: () => router.back(),
         },
       ]);
     } catch (error) {
-      console.error('Error creating project:', error);
+      console.error('Error updating project:', error);
       Alert.alert(
         'Erreur',
-        error instanceof Error ? error.message : 'Une erreur est survenue lors de la création du projet'
+        error instanceof Error ? error.message : 'Une erreur est survenue lors de la modification du projet'
       );
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  if (isLoading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <Text>Chargement...</Text>
+      </View>
+    );
+  }
 
   return (
     <ScrollView style={styles.container}>
@@ -179,25 +219,13 @@ export default function NewProjectScreen() {
           </View>
         </View>
 
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Documents</Text>
-          
-          <Pressable style={styles.documentButton}>
-            <FileText size={20} color="#2563eb" />
-            <Text style={styles.documentButtonText}>Ajouter des documents</Text>
-          </Pressable>
-          <Text style={styles.documentHint}>
-            Ajoutez des plans, devis ou autres documents de référence
-          </Text>
-        </View>
-
         <Pressable 
           style={[styles.submitButton, isSubmitting && styles.submitButtonDisabled]}
           onPress={handleSubmit}
           disabled={isSubmitting}
         >
           <Text style={styles.submitButtonText}>
-            {isSubmitting ? 'Création en cours...' : 'Créer le projet'}
+            {isSubmitting ? 'Modification en cours...' : 'Modifier le projet'}
           </Text>
         </Pressable>
       </View>
@@ -208,6 +236,12 @@ export default function NewProjectScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#f3f4f6',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
     backgroundColor: '#f3f4f6',
   },
   form: {
@@ -261,28 +295,6 @@ const styles = StyleSheet.create({
     marginLeft: 8,
     fontSize: 16,
     color: '#111827',
-  },
-  documentButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 12,
-    borderWidth: 2,
-    borderColor: '#e5e7eb',
-    borderRadius: 8,
-    borderStyle: 'dashed',
-  },
-  documentButtonText: {
-    marginLeft: 8,
-    fontSize: 16,
-    color: '#2563eb',
-    fontWeight: '500',
-  },
-  documentHint: {
-    fontSize: 12,
-    color: '#6b7280',
-    marginTop: 8,
-    textAlign: 'center',
   },
   submitButton: {
     backgroundColor: '#2563eb',

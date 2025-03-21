@@ -1,11 +1,40 @@
 import { useState } from 'react';
-import { View, Text, TextInput, Pressable, StyleSheet } from 'react-native';
-import { Link } from 'expo-router';
+import { View, Text, TextInput, Pressable, StyleSheet, Alert } from 'react-native';
+import { Link, router } from 'expo-router';
 import { Building2 } from 'lucide-react-native';
+import { supabase } from '@/lib/supabase';
 
 export default function LoginScreen() {
-  const [phone, setPhone] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleLogin = async () => {
+    if (!email || !password) {
+      Alert.alert('Erreur', 'Veuillez remplir tous les champs');
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) throw error;
+
+      router.replace('/(tabs)');
+    } catch (error) {
+      console.error('Error logging in:', error);
+      Alert.alert(
+        'Erreur',
+        error instanceof Error ? error.message : 'Une erreur est survenue lors de la connexion'
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -17,14 +46,15 @@ export default function LoginScreen() {
 
       <View style={styles.form}>
         <View style={styles.inputGroup}>
-          <Text style={styles.label}>Téléphone</Text>
+          <Text style={styles.label}>Email</Text>
           <TextInput
             style={styles.input}
-            value={phone}
-            onChangeText={setPhone}
-            placeholder="Votre numéro de téléphone"
-            keyboardType="phone-pad"
+            value={email}
+            onChangeText={setEmail}
+            placeholder="Votre adresse email"
+            keyboardType="email-address"
             autoCapitalize="none"
+            autoComplete="email"
           />
         </View>
 
@@ -39,8 +69,14 @@ export default function LoginScreen() {
           />
         </View>
 
-        <Pressable style={styles.loginButton}>
-          <Text style={styles.loginButtonText}>Se connecter</Text>
+        <Pressable 
+          style={[styles.loginButton, isLoading && styles.loginButtonDisabled]}
+          onPress={handleLogin}
+          disabled={isLoading}
+        >
+          <Text style={styles.loginButtonText}>
+            {isLoading ? 'Connexion...' : 'Se connecter'}
+          </Text>
         </Pressable>
 
         <Link href="/auth/register" asChild>
@@ -99,6 +135,9 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     alignItems: 'center',
     marginTop: 8,
+  },
+  loginButtonDisabled: {
+    backgroundColor: '#93c5fd',
   },
   loginButtonText: {
     color: '#ffffff',
